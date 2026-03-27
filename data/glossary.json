@@ -2056,6 +2056,16 @@
       "cat": "NEW",
       "def": "原指参与游戏必须支付的最低筹码，商业中表示必备条件/最低标准",
       "ex": "AI tools have simply become table stakes for brainstorming."
+    },
+    {
+      "id": 1001,
+      "cn": "KOS",
+      "en": "Key Opinion Sales",
+      "cat": "小红书",
+      "def": "在销售场景中，具备专业影响力并能够通过内容、讲解或互动直接促成购买决策的人。",
+      "ex": "小红书的 KOS 转化都还不错",
+      "contributor": "zan",
+      "addedAt": "2026-03-27"
     }
   ]
 }
