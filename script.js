@@ -7,6 +7,7 @@ const CATS_ORDER = ['全部', '通用', 'Social', '3C 数码', '小红书', '抖
 let BUILTIN        = [];
 let customTerms    = [];
 let localEdits     = {};
+let localDeletes   = [];
 let allTerms       = [];
 let searchQuery    = '';
 let activeCategory = '全部';
@@ -27,11 +28,19 @@ function loadEdits() {
 function saveEdits() {
   localStorage.setItem('mktTermsEdits', JSON.stringify(localEdits));
 }
+function loadDeletes() {
+  try { return JSON.parse(localStorage.getItem('mktTermsDeletes') || '[]'); } catch { return []; }
+}
+function saveDeletes() {
+  localStorage.setItem('mktTermsDeletes', JSON.stringify(localDeletes));
+}
 function buildAllTerms() {
-  const builtinWithEdits = BUILTIN.map(t => {
-    const edit = localEdits[t.id];
-    return edit ? { ...t, ...edit } : t;
-  });
+  const builtinWithEdits = BUILTIN
+    .filter(t => !localDeletes.includes(t.id))
+    .map(t => {
+      const edit = localEdits[t.id];
+      return edit ? { ...t, ...edit } : t;
+    });
   return [...builtinWithEdits, ...customTerms];
 }
 
@@ -278,6 +287,52 @@ function deleteCustom(id) {
   allTerms = buildAllTerms();
   renderTabs(); renderCards();
   showToast('已删除词汇');
+}
+
+// ── FAB More / Sub-menu ──
+const fabMore    = document.getElementById('fabMore');
+const fabSubMenu = document.getElementById('fabSubMenu');
+
+fabMore.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const open = fabSubMenu.classList.toggle('open');
+  fabMore.classList.toggle('open', open);
+});
+
+document.addEventListener('click', () => {
+  fabSubMenu.classList.remove('open');
+  fabMore.classList.remove('open');
+});
+
+fabSubMenu.addEventListener('click', e => e.stopPropagation());
+
+// ── Layout toggle ──
+let isGridView = false;
+document.getElementById('fabLayout').addEventListener('click', () => {
+  isGridView = !isGridView;
+  document.getElementById('termsGrid').classList.toggle('view-grid', isGridView);
+  localStorage.setItem('mktLayoutGrid', isGridView ? '1' : '');
+});
+
+// ── Dark mode ──
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+}
+
+const savedDark = localStorage.getItem('mktDarkMode') === '1';
+applyTheme(savedDark);
+
+document.getElementById('fabDark').addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = !isDark;
+  applyTheme(next);
+  localStorage.setItem('mktDarkMode', next ? '1' : '');
+});
+
+// Restore layout preference
+if (localStorage.getItem('mktLayoutGrid') === '1') {
+  isGridView = true;
+  document.getElementById('termsGrid').classList.add('view-grid');
 }
 
 // ── Modal ──
@@ -547,6 +602,8 @@ observer.observe(sentinel);
     raf = requestAnimationFrame(frame);
     ctx.clearRect(0, 0, W, H);
     t++;
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const pc = dark ? '255,255,255' : '0,0,0';
     pts.forEach(p => {
       p.x += p.vx + Math.sin(t * p.freq + p.phase) * 0.35;
       p.y += p.vy + Math.cos(t * p.freq * 0.8 + p.phase) * 0.22;
@@ -565,7 +622,7 @@ observer.observe(sentinel);
           ctx.beginPath();
           ctx.moveTo(pts[i].x, pts[i].y);
           ctx.lineTo(pts[j].x, pts[j].y);
-          ctx.strokeStyle = `rgba(0,0,0,${(1 - d / MAX) * 0.055})`;
+          ctx.strokeStyle = `rgba(${pc},${(1 - d / MAX) * 0.055})`;
           ctx.lineWidth = 0.8;
           ctx.stroke();
         }
@@ -574,7 +631,7 @@ observer.observe(sentinel);
     pts.forEach(p => {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(0,0,0,${p.alpha})`;
+      ctx.fillStyle = `rgba(${pc},${p.alpha})`;
       ctx.fill();
     });
   }
@@ -630,7 +687,9 @@ document.getElementById('confirmOk').addEventListener('click', () => {
     customTerms = customTerms.filter(t => t.id !== editingId);
     saveCustom();
   } else {
+    if (!localDeletes.includes(editingId)) localDeletes.push(editingId);
     delete localEdits[editingId];
+    saveDeletes();
     saveEdits();
   }
   allTerms = buildAllTerms();
@@ -648,6 +707,7 @@ async function init() {
 
     customTerms = loadCustom();
     localEdits  = loadEdits();
+    localDeletes = loadDeletes();
     allTerms    = buildAllTerms();
     nextId      = Math.max(...allTerms.map(t => t.id || 0), 10000) + 1;
 
