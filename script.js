@@ -1,6 +1,6 @@
 // ── Config ──
 const DATA_URL   = './data/glossary.json';
-const SUBMIT_URL = 'https://marketing-glossary.vercel.app/api/submit-word';
+const SUBMIT_URL = 'https://marketing-glossary-swart.vercel.app/api/submit-word';
 const CATS_ORDER = ['全部', '通用', 'Social', '3C 数码', '小红书', '抖音', '直播', 'NEW'];
 
 // ── State ──
