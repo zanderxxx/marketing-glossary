@@ -2076,6 +2076,16 @@
       "ex": "一句话说明一句话睡眠一句话说明",
       "contributor": "zan",
       "addedAt": "2026-03-27"
+    },
+    {
+      "id": 1003,
+      "cn": "UGC",
+      "en": "User Generated Content",
+      "cat": "通用",
+      "def": "用户生成内容，真实体验或分享。",
+      "ex": "你们看看我用了[产品]之后的效果，是不是很惊喜？",
+      "contributor": "zan",
+      "addedAt": "2026-03-27"
     }
   ]
 }
