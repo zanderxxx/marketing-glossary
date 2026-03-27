@@ -162,7 +162,7 @@ function renderTabs() {
   nav.innerHTML = allCats.map(cat => {
     const cnt = cat === '全部' ? total : (counts[cat] || 0);
     const isActive = activeCategory === cat;
-    return `<button class="cat-btn${isActive ? ' active' : ''}" onclick="setCategory('${escHtml(cat)}')">${escHtml(cat)}<span class="cat-count">${cnt}</span></button>`;
+    return `<button class="cat-btn${isActive ? ' active' : ''}${cat === 'NEW' ? ' cat-new' : ''}" onclick="setCategory('${escHtml(cat)}')">${escHtml(cat)}<span class="cat-count">${cnt}</span></button>`;
   }).join('');
   if (typeof renderStickySelect === 'function') renderStickySelect();
 }
@@ -312,6 +312,14 @@ document.getElementById('modalSubmit').addEventListener('click', () => {
   if (!valid) return;
 
   if (modalMode === 'add') {
+    // Client-side duplicate check
+    const cnLow = cn.toLowerCase();
+    const enLow = en.toLowerCase();
+    const dup = allTerms.some(t =>
+      (t.cn || '').toLowerCase() === cnLow || (t.en || '').toLowerCase() === enLow
+    );
+    if (dup) { showToast('该词汇已存在'); return; }
+
     // Optimistic UI: show locally right away with _pending flag
     const optimistic = { id: nextId++, cn, en, cat, def, ex, contributor, _custom: true, _pending: true };
     customTerms.unshift(optimistic);
@@ -401,7 +409,7 @@ function renderStickySelect() {
   stickyCats.innerHTML = allCats.map(cat => {
     const cnt = cat === '全部' ? total : (counts[cat] || 0);
     const isActive = activeCategory === cat;
-    return `<button class="sticky-cat-btn${isActive ? ' active' : ''}" onclick="setCategory('${escHtml(cat)}')">${escHtml(cat)}<span class="cat-count">${cnt}</span></button>`;
+    return `<button class="sticky-cat-btn${isActive ? ' active' : ''}${cat === 'NEW' ? ' cat-new' : ''}" onclick="setCategory('${escHtml(cat)}')">${escHtml(cat)}<span class="cat-count">${cnt}</span></button>`;
   }).join('');
 }
 
