@@ -68,6 +68,39 @@ function escHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
+// ── Speak ──
+function speakEn(id, text) {
+  if (!text || !window.speechSynthesis) return;
+  const btn = document.querySelector(`.btn-speak[data-id="${id}"]`);
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    document.querySelectorAll('.btn-speak.speaking').forEach(b => b.classList.remove('speaking'));
+    if (btn && btn.classList.contains('was-speaking')) {
+      btn.classList.remove('was-speaking');
+      return;
+    }
+  }
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'en-GB';
+  utter.rate = 0.9;
+
+  // Pick a British English female voice if available
+  const voices = window.speechSynthesis.getVoices();
+  const gbFemale = voices.find(v => v.lang === 'en-GB' && /female|woman|girl/i.test(v.name))
+    || voices.find(v => v.lang === 'en-GB' && !/male|man/i.test(v.name))
+    || voices.find(v => v.lang === 'en-GB');
+  if (gbFemale) utter.voice = gbFemale;
+
+  if (btn) { btn.classList.add('speaking'); btn.classList.add('was-speaking'); }
+  utter.onend = utter.onerror = () => {
+    document.querySelectorAll('.btn-speak.speaking').forEach(b => {
+      b.classList.remove('speaking');
+      b.classList.remove('was-speaking');
+    });
+  };
+  window.speechSynthesis.speak(utter);
+}
+
 // ── Render cards ──
 function renderCards() {
   const grid  = document.getElementById('termsGrid');
@@ -102,7 +135,7 @@ function renderCards() {
       <div class="card-header">
         <div class="card-titles">
           <div class="term-cn">${hl(cn, q)}</div>
-          <div class="term-en">${hl(en, q)}</div>
+          <div class="term-en">${hl(en, q)}${en ? `<button class="btn-speak" data-id="${t.id}" onclick="event.stopPropagation();speakEn(${t.id},'${en.replace(/'/g, "\\'")}')" title="朗读"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></button>` : ''}</div>
         </div>
         <div class="card-badges">
           <span class="badge badge-cat">${escHtml(cat)}</span>
@@ -174,16 +207,34 @@ function setCategory(cat) {
 }
 
 // ── Search ──
-document.getElementById('searchInput').addEventListener('input', function () {
-  searchQuery = this.value;
-  document.getElementById('searchClear').classList.toggle('visible', !!searchQuery);
+function doSearch() {
+  searchQuery = document.getElementById('searchInput').value;
+  stickySearchInput.value = searchQuery;
   renderTabs();
   renderCards();
+}
+
+document.getElementById('searchInput').addEventListener('input', function () {
+  const hasVal = !!this.value;
+  document.getElementById('searchClear').classList.toggle('visible', hasVal);
+  document.querySelector('.search-wrap').classList.toggle('has-value', hasVal);
+  stickySearchInput.value = this.value;
+  if (!hasVal) {
+    searchQuery = '';
+    renderTabs(); renderCards();
+  }
 });
+document.getElementById('searchInput').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') doSearch();
+});
+document.getElementById('searchSubmit').addEventListener('click', doSearch);
+
 document.getElementById('searchClear').addEventListener('click', function () {
   const inp = document.getElementById('searchInput');
   inp.value = ''; searchQuery = '';
+  stickySearchInput.value = '';
   this.classList.remove('visible');
+  document.querySelector('.search-wrap').classList.remove('has-value');
   inp.focus();
   renderTabs(); renderCards();
 });
@@ -245,6 +296,7 @@ function openAddModal() {
   clearForm();
   document.getElementById('modalTitle').textContent = '提交词汇';
   document.getElementById('modalSubmit').textContent = '提交词汇';
+  document.getElementById('modalDelete').style.display = 'none';
   populateCatSelect();
   overlay.classList.add('open');
   document.getElementById('f_cn').focus();
@@ -260,6 +312,7 @@ function openEditModal(id) {
   clearForm();
   document.getElementById('modalTitle').textContent = '编辑词汇';
   document.getElementById('modalSubmit').textContent = '保存修改';
+  document.getElementById('modalDelete').style.display = '';
   populateCatSelect();
 
   document.getElementById('f_cn').value = term.cn || '';
@@ -436,10 +489,6 @@ stickySearchInput.addEventListener('input', function () {
   renderTabs(); renderCards();
 });
 
-document.getElementById('searchInput').addEventListener('input', function () {
-  stickySearchInput.value = this.value;
-});
-
 const sentinel = document.getElementById('categoryNav');
 const observer = new IntersectionObserver(
   ([entry]) => {
@@ -554,6 +603,40 @@ function injectJsonLd(terms) {
   });
   document.head.appendChild(script);
 }
+
+// ── Delete from edit modal ──
+const confirmOverlay = document.getElementById('confirmOverlay');
+
+document.getElementById('modalDelete').addEventListener('click', () => {
+  const term = allTerms.find(t => t.id === editingId);
+  if (!term) return;
+  document.getElementById('confirmTermName').textContent = `"${term.cn}"`;
+  confirmOverlay.classList.add('open');
+});
+
+document.getElementById('confirmCancel').addEventListener('click', () => {
+  confirmOverlay.classList.remove('open');
+});
+
+confirmOverlay.addEventListener('click', e => {
+  if (e.target === confirmOverlay) confirmOverlay.classList.remove('open');
+});
+
+document.getElementById('confirmOk').addEventListener('click', () => {
+  confirmOverlay.classList.remove('open');
+  closeModal();
+  const isCustom = customTerms.some(t => t.id === editingId);
+  if (isCustom) {
+    customTerms = customTerms.filter(t => t.id !== editingId);
+    saveCustom();
+  } else {
+    delete localEdits[editingId];
+    saveEdits();
+  }
+  allTerms = buildAllTerms();
+  renderTabs(); renderCards();
+  showToast('词汇已删除');
+});
 
 // ── Init (async) ──
 async function init() {
