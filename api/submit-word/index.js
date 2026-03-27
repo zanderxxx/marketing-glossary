@@ -28,14 +28,7 @@ function validate(body) {
 
   const { cn, en, cat, def, ex, contributor } = body;
 
-  // 2. Field length limits
-  if (cn.length > 30)          errors.push('中文名不超过 30 字');
-  if (en.length > 100)         errors.push('英文名不超过 100 字');
-  if (def.length < 8)          errors.push('定义至少 8 个字');
-  if (def.length > 400)        errors.push('定义不超过 400 字');
-  if (ex.length < 4)           errors.push('例句至少 4 个字');
-  if (ex.length > 300)         errors.push('例句不超过 300 字');
-  if (contributor.length > 50) errors.push('贡献者名称不超过 50 字');
+  // 2. Field length limits (removed)
 
   // 3. Valid category
   if (!VALID_CATS.includes(cat)) {
