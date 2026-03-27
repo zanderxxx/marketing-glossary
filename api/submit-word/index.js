@@ -19,19 +19,21 @@ function validate(body) {
   const errors = [];
 
   // 1. Required fields
-  for (const field of ['cn', 'en', 'cat', 'def', 'ex', 'contributor']) {
+  for (const field of ['cn', 'en', 'def', 'contributor']) {
     if (!body[field] || String(body[field]).trim() === '') {
       errors.push(`字段 ${field} 不能为空`);
     }
   }
   if (errors.length) return { ok: false, errors };
 
-  const { cn, en, cat, def, ex, contributor } = body;
+  const { cn, en, def, contributor } = body;
+  const cat = body.cat || '自定义';
+  const ex  = body.ex  || '';
 
   // 2. Field length limits (removed)
 
-  // 3. Valid category
-  if (!VALID_CATS.includes(cat)) {
+  // 3. Valid category (optional, defaults to '自定义')
+  if (cat !== '自定义' && !VALID_CATS.includes(cat)) {
     errors.push(`无效分类：${cat}`);
   }
 

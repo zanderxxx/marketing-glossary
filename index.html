@@ -543,8 +543,8 @@
   }
 
   .fab {
-    width: 56px;
-    height: 56px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: var(--surface);
     color: var(--text-primary);
@@ -593,20 +593,22 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 0;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 8px;
+    border-radius: 18px;
+    width: 40px;
+    padding: 0;
+    overflow: hidden;
     box-shadow: var(--shadow-lg);
   }
 
   .fab.fab-sm {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     box-shadow: none;
     border-color: transparent;
-    font-size: 18px;
+    font-size: 16px;
   }
   .fab.fab-sm:hover {
     border-color: var(--border);
@@ -633,7 +635,15 @@
   }
 
   /* ── Dark mode misc ── */
-  [data-theme="dark"] .badge-pending { background: #3A3000; color: #E8CC60; }
+  [data-theme="dark"] .cat-btn.cat-new,
+  [data-theme="dark"] .sticky-cat-btn.cat-new {
+    background: transparent;
+    animation: none;
+    border-color: rgba(147,197,253,0.3);
+    color: rgba(147,197,253,0.7);
+  }
+  [data-theme="dark"] .cat-btn.cat-new .cat-count,
+  [data-theme="dark"] .sticky-cat-btn.cat-new .cat-count { color: rgba(147,197,253,0.5); }
   [data-theme="dark"] .btn-danger { border-color: #7A2020; color: #F87171; }
   [data-theme="dark"] .btn-danger:hover { background: #2A1010; border-color: #F87171; }
 
@@ -1045,7 +1055,7 @@
     .term-card { padding: 20px 0; }
     .term-cn { font-size: 16px; }
     .fab-group { right: 20px; bottom: 24px; }
-    .fab { width: 50px; height: 50px; font-size: 22px; }
+    .fab { width: 40px; height: 40px; font-size: 18px; }
     .modal { border-radius: 16px; }
     .modal-header { padding: 22px 20px 16px; }
     .modal-body { padding: 20px 20px 24px; }
@@ -1215,7 +1225,7 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label" for="f_cat">分类归属 <span class="req">*</span></label>
+        <label class="form-label" for="f_cat">分类归属</label>
         <select class="form-select" id="f_cat">
           <option value="">— 选择分类 —</option>
         </select>
@@ -1225,7 +1235,7 @@
         <textarea class="form-textarea" id="f_def" placeholder="请简明描述这个词汇的含义…" rows="3"></textarea>
       </div>
       <div class="form-group">
-        <label class="form-label" for="f_ex">场景 / 例句 <span class="req">*</span></label>
+        <label class="form-label" for="f_ex">场景 / 例句</label>
         <textarea class="form-textarea" id="f_ex" placeholder="请提供一个使用场景或示例句子…" rows="2"></textarea>
       </div>
       <div class="form-group">

@@ -307,11 +307,23 @@ document.addEventListener('click', () => {
 fabSubMenu.addEventListener('click', e => e.stopPropagation());
 
 // ── Layout toggle ──
+const ICON_GRID = `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>`;
+const ICON_LIST = `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="5" x2="16" y2="5"/><line x1="4" y1="10" x2="16" y2="10"/><line x1="4" y1="15" x2="16" y2="15"/></svg>`;
+const ICON_MOON = `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 13A7 7 0 1 1 7 3a5.5 5.5 0 0 0 10 10z"/></svg>`;
+const ICON_SUN  = `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="3.5"/><line x1="10" y1="1.5" x2="10" y2="3.5"/><line x1="10" y1="16.5" x2="10" y2="18.5"/><line x1="1.5" y1="10" x2="3.5" y2="10"/><line x1="16.5" y1="10" x2="18.5" y2="10"/><line x1="4.1" y1="4.1" x2="5.5" y2="5.5"/><line x1="14.5" y1="14.5" x2="15.9" y2="15.9"/><line x1="15.9" y1="4.1" x2="14.5" y2="5.5"/><line x1="5.5" y1="14.5" x2="4.1" y2="15.9"/></svg>`;
+
+function closeFabSubMenu() {
+  fabSubMenu.classList.remove('open');
+  fabMore.classList.remove('open');
+}
+
 let isGridView = false;
 document.getElementById('fabLayout').addEventListener('click', () => {
   isGridView = !isGridView;
   document.getElementById('termsGrid').classList.toggle('view-grid', isGridView);
+  document.getElementById('fabLayout').innerHTML = isGridView ? ICON_LIST : ICON_GRID;
   localStorage.setItem('mktLayoutGrid', isGridView ? '1' : '');
+  closeFabSubMenu();
 });
 
 // ── Dark mode ──
@@ -326,13 +338,21 @@ document.getElementById('fabDark').addEventListener('click', () => {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const next = !isDark;
   applyTheme(next);
+  document.getElementById('fabDark').innerHTML = next ? ICON_SUN : ICON_MOON;
   localStorage.setItem('mktDarkMode', next ? '1' : '');
+  closeFabSubMenu();
 });
 
 // Restore layout preference
 if (localStorage.getItem('mktLayoutGrid') === '1') {
   isGridView = true;
   document.getElementById('termsGrid').classList.add('view-grid');
+  document.getElementById('fabLayout').innerHTML = ICON_LIST;
+}
+
+// Restore dark mode icon
+if (localStorage.getItem('mktDarkMode') === '1') {
+  document.getElementById('fabDark').innerHTML = ICON_SUN;
 }
 
 // ── Modal ──
@@ -406,17 +426,19 @@ function clearForm() {
 document.getElementById('modalSubmit').addEventListener('click', () => {
   const cn          = document.getElementById('f_cn').value.trim();
   const en          = document.getElementById('f_en').value.trim();
-  const cat         = document.getElementById('f_cat').value;
+  const cat         = document.getElementById('f_cat').value || '自定义';
   const def         = document.getElementById('f_def').value.trim();
   const ex          = document.getElementById('f_ex').value.trim();
   const contributor = document.getElementById('f_contributor').value.trim();
 
   let valid = true;
-  [['f_cn', cn], ['f_en', en], ['f_cat', cat], ['f_def', def], ['f_ex', ex], ['f_contributor', contributor]].forEach(([id, val]) => {
+  [['f_cn', cn], ['f_en', en], ['f_def', def], ['f_contributor', contributor]].forEach(([id, val]) => {
     const el = document.getElementById(id);
     if (!val) { el.classList.add('error'); valid = false; }
     else { el.classList.remove('error'); }
   });
+  // clear optional fields' error state
+  ['f_cat', 'f_ex'].forEach(id => document.getElementById(id).classList.remove('error'));
   if (!valid) return;
 
   if (modalMode === 'add') {
